@@ -2,56 +2,77 @@ package ru.yandex.practicum.catsgram.service;
 
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.catsgram.exception.ConditionsNotMetException;
+import ru.yandex.practicum.catsgram.exception.DuplicatedDataException;
 import ru.yandex.practicum.catsgram.exception.NotFoundException;
-import ru.yandex.practicum.catsgram.model.Post;
+import ru.yandex.practicum.catsgram.model.User;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-// Указываем, что класс PostService - является бином и его
-// нужно добавить в контекст приложения
 @Service
 public class UserService {
-    private final Map<Long, Post> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
 
-    public Collection<Post> findAll() {
+    public Collection<User> findAll() {
         return users.values();
     }
 
-    public Post create(Post post) throws ConditionsNotMetException {
-        if (post.getDescription() == null || post.getDescription().isBlank()) {
-            throw new ConditionsNotMetException("Описание не может быть пустым");
+    public User create(User user) throws ConditionsNotMetException, DuplicatedDataException {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new ConditionsNotMetException("Имейл должен быть указан.");
         }
 
-        post.setId(getNextId());
-        post.setPostDate(Instant.now());
-        posts.put(post.getId(), post);
-        return post;
+        if (isEmailAlreadyRegistered(user.getEmail())) {
+            throw new DuplicatedDataException("Этот имейл уже используется.");
+        }
+
+        user.setId(getNextId());
+        user.setRegistrationDate(Instant.now());
+        users.put(user.getId(), user);
+        return user;
     }
 
-    public Post update(Post newPost) throws ConditionsNotMetException, NotFoundException {
-        if (newPost.getId() == null) {
-            throw new ConditionsNotMetException("Id должен быть указан");
+    public User update(User updateUser) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+        if (updateUser.getId() == null) {
+            throw new ConditionsNotMetException("Id должен быть указан.");
         }
-        if (posts.containsKey(newPost.getId())) {
-            Post oldPost = posts.get(newPost.getId());
-            if (newPost.getDescription() == null || newPost.getDescription().isBlank()) {
-                throw new ConditionsNotMetException("Описание не может быть пустым");
+
+        User existingUser = users.get(updateUser.getId());
+        if (existingUser == null) {
+            throw new NotFoundException("Пользователь с id = " + updateUser.getId() + " не найден.");
+        }
+
+        if (updateUser.getEmail() != null && !updateUser.getEmail().isBlank() && !updateUser.getEmail().equals(existingUser.getEmail())) {
+            if (isEmailAlreadyRegistered(updateUser.getEmail())) {
+                throw new DuplicatedDataException("Этот имейл уже используется.");
             }
-            oldPost.setDescription(newPost.getDescription());
-            return oldPost;
+            existingUser.setEmail(updateUser.getEmail());
         }
-        throw new NotFoundException("Пост с id = " + newPost.getId() + " не найден");
+
+        if (updateUser.getUsername() != null) {
+            existingUser.setUsername(updateUser.getUsername());
+        }
+
+        if (updateUser.getPassword() != null) {
+            existingUser.setPassword(updateUser.getPassword());
+        }
+
+        users.put(existingUser.getId(), existingUser);
+        return existingUser;
+    }
+
+    private boolean isEmailAlreadyRegistered(String email) {
+        return users.values().stream()
+                .anyMatch(user -> user.getEmail().equals(email));
     }
 
     private long getNextId() {
-        long currentMaxId = posts.keySet()
+        return users.keySet()
                 .stream()
                 .mapToLong(id -> id)
                 .max()
-                .orElse(0);
-        return ++currentMaxId;
+                .orElse(0) + 1;
     }
 }
