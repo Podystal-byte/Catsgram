@@ -6,9 +6,7 @@ import ru.yandex.practicum.catsgram.exception.NotFoundException;
 import ru.yandex.practicum.catsgram.model.Post;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 // Указываем, что класс PostService - является бином и его
 // нужно добавить в контекст приложения
@@ -16,9 +14,26 @@ import java.util.Map;
 public class PostService {
     private final Map<Long, Post> posts = new HashMap<>();
 
-    public Collection<Post> findAll() {
-        return posts.values();
+    public Collection<Post> findAll(Integer size, String sort, Integer from) {
+        int safeSize = (size <= 0) ? 10 : size;
+        int safeFrom = (from < 0) ? 0 : from;
+        SortOrder request = SortOrder.from(sort == null ? "desc" : sort);
+        if (request == null) {
+            request = SortOrder.DESCENDING;
+        }
+
+        Comparator<Post> comparator = Comparator.comparing(Post::getPostDate);
+        if (request == SortOrder.DESCENDING) {
+            comparator = comparator.reversed();
+        }
+
+        return posts.values().stream()
+                .sorted(comparator)
+                .skip(safeFrom)
+                .limit(safeSize)
+                .toList();
     }
+
 
     public Post create(Post post) throws ConditionsNotMetException {
         if (post.getDescription() == null || post.getDescription().isBlank()) {
@@ -46,12 +61,32 @@ public class PostService {
         throw new NotFoundException("Пост с id = " + newPost.getId() + " не найден");
     }
 
+    public Optional<Post> findPostById(Long id) {
+        return posts.values().stream().filter(user -> user.getId().equals(id)).findFirst();
+    }
+
     private long getNextId() {
-        long currentMaxId = posts.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
+        long currentMaxId = posts.keySet().stream().mapToLong(id -> id).max().orElse(0);
         return ++currentMaxId;
+    }
+}
+
+enum SortOrder {
+    ASCENDING, DESCENDING;
+
+    // Преобразует строку в элемент перечисления
+    public static SortOrder from(String order) {
+        switch (order.toLowerCase()) {
+            case "ascending":
+                return ASCENDING;
+            case "asc":
+                return ASCENDING;
+            case "descending":
+                return DESCENDING;
+            case "desc":
+                return DESCENDING;
+            default:
+                return null;
+        }
     }
 }

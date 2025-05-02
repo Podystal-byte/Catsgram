@@ -18,8 +18,8 @@ public class PostController {
     }
 
     @GetMapping
-    public Collection<Post> findAll() {
-        return postService.findAll();
+    public Collection<Post> findAll(@RequestParam(defaultValue = "10") Integer size, @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "0") Integer from) {
+        return postService.findAll(size, sort, from);
     }
 
     @PostMapping
@@ -30,5 +30,13 @@ public class PostController {
     @PutMapping
     public Post update(@RequestBody Post newPost) throws ConditionsNotMetException, NotFoundException {
         return postService.update(newPost);
+    }
+
+    @GetMapping("/{id}")
+    public Post findById(@PathVariable Long id) throws NotFoundException {
+        if (postService.findPostById(id).isEmpty()){
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return postService.findPostById(id).get();
     }
 }

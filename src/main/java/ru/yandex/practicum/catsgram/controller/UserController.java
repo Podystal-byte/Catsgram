@@ -8,8 +8,6 @@ import ru.yandex.practicum.catsgram.model.User;
 import ru.yandex.practicum.catsgram.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -34,5 +32,13 @@ public class UserController {
     @PutMapping
     public User update(@RequestBody User user) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userService.update(user);
+    }
+
+    @GetMapping("/{id}")
+    public User findById(@PathVariable Long id) throws NotFoundException {
+        if (userService.findUserById(id).isEmpty()){
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return userService.findUserById(id).get();
     }
 }

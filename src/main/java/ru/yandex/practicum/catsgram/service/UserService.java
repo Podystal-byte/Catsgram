@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -63,16 +64,15 @@ public class UserService {
         return existingUser;
     }
 
+    public Optional<User> findUserById(Long id) {
+        return users.values().stream().filter(user -> user.getId().equals(id)).findFirst();
+    }
+
     private boolean isEmailAlreadyRegistered(String email) {
-        return users.values().stream()
-                .anyMatch(user -> user.getEmail().equals(email));
+        return users.values().stream().anyMatch(user -> user.getEmail().equals(email));
     }
 
     private long getNextId() {
-        return users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0) + 1;
+        return users.keySet().stream().mapToLong(id -> id).max().orElse(0) + 1;
     }
 }
