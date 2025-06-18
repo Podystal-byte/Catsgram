@@ -8,8 +8,6 @@ import ru.yandex.practicum.catsgram.model.Post;
 import java.time.Instant;
 import java.util.*;
 
-// Указываем, что класс PostService - является бином и его
-// нужно добавить в контекст приложения
 @Service
 public class PostService {
     private final Map<Long, Post> posts = new HashMap<>();

@@ -1,12 +1,9 @@
-package ru.yandex.practicum.logging;
+package ru.yandex.practicum.catsgram;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {
-        "ru.yandex.practicum.catsgram",
-        "ru.yandex.practicum.logging"
-})
+@SpringBootApplication
 public class MyApplication {
     public static void main(String[] args) {
         SpringApplication.run(MyApplication.class, args);
